@@ -1,0 +1,118 @@
+﻿=========================PROGRAM======================
+
+#include<omp.h>
+#include<stdio.h>
+
+void oddeven_sort(int a[],int n)
+{
+int phase,temp,i;
+int tid=omp_get_num_threads();
+
+for(phase=0;phase<n;++phase)
+{
+if(phase%2==0)
+{
+  #pragma omp parallel for num_threads(tid)shared(a,n)private(i,temp)
+  for(i=1;i<n;i+=2)
+	{
+		if(a[i-1]>a[i])
+		{
+		temp=a[i];
+		a[i]=a[i-1];
+		a[i-1]=temp;
+		}
+	}
+}
+
+else
+{
+  #pragma omp parallel for num_threads(tid) shared(a,n) private(i,temp)
+	for(i=1;i<n-1;i+=2)
+	{
+		if(a[i]>a[i+1])
+		{
+		temp=a[i];
+		a[i]=a[i+1];
+		a[i+1]=temp;
+		}
+	}
+}
+
+}
+}
+
+void main()
+{
+int a[15],i,n;
+printf("Enter the array size:");
+scanf("%d",&n);
+
+for(i=0;i<n;i++)
+{
+printf("\nEnter the element for index location:%d:",i);
+scanf("%d",&a[i]);
+}
+
+oddeven_sort(a,n);
+
+printf("\nSorted Array:");
+for(i=0;i<n;i++)
+{
+	printf("\t%d",a[i]);
+}
+printf("\n");
+}
+
+
+
+=======================OUTPUT====================
+[student@localhost ~]$ su
+Password: 
+[root@localhost student]# scp oddevensort.c root@192.168.7.2:/home
+Debian GNU/Linux 7
+
+BeagleBoard.org BeagleBone Debian Image 2014-05-14
+
+Support/FAQ: http://elinux.org/Beagleboard:BeagleBoneBlack_Debian
+oddevensort.c                                 100%  812     0.8KB/s   00:00    
+[root@localhost student]# ssh root@192.168.7.2
+Debian GNU/Linux 7
+
+BeagleBoard.org BeagleBone Debian Image 2014-05-14
+
+Support/FAQ: http://elinux.org/Beagleboard:BeagleBoneBlack_Debian
+Last login: Thu May 15 02:55:22 2014 from linux-15.local
+root@beaglebone:~# cd /home
+root@beaglebone:/home# ls
+a2.cpp	   booths.c	  hello.c			      nitin
+a2.py	   client1.class  jdk1.7.0_60			      odd.c
+a3.c	   client1.java   jdk-7u60-linux-arm-vfp-sflt.tar.gz  oddevensort.c
+abc.c	   client.class   jdk-7u79-linux-i586.tar.gz	      signal.py
+a.out	   client.java	  jdk-8u20-linux-x64.tar.gz	      student
+beagle.py  debian	  kii				      trafficli8.py
+booth.py   elevator.py	  lifts.py			      traffic.py
+root@beaglebone:/home# gcc -fopenmp oddevensort.c
+root@beaglebone:/home# ./a.out
+Enter the array size:8
+
+Enter the element for index location:0:56
+
+Enter the element for index location:1:89
+
+Enter the element for index location:2:190
+
+Enter the element for index location:3:3
+
+Enter the element for index location:4:678
+
+Enter the element for index location:5:400
+
+Enter the element for index location:6:36
+
+Enter the element for index location:7:678
+
+Sorted Array:	3	36	56	89	190	400	678	678
+root@beaglebone:/home# 
+  
+
+

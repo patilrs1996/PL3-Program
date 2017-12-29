@@ -1,0 +1,90 @@
+PROGRAM:
+
+
+(defvar A ) 
+(defvar B ) 
+(defvar C ) 
+
+
+(defun :bits (value &optional (size 64))
+  (format t "~v,'~B" size value))
+
+(write-line "Welcome To Calculator") 
+
+
+
+
+(write-line "Enter A: ") 
+(setq A (read)) 
+(:bits A)
+(terpri)  ; This is for New line   
+
+(write-line "Enter B: ") 
+(setq B (read)) 
+(:bits B)
+(terpri)  ; This is for New line   
+ 
+(write-line "1.Addition") 
+(write-line "2.Substraction") 
+(write-line "3.Multiplication") 
+(write-line "4.Division")  
+
+
+(sb-thread:make-thread (lambda () (progn (sleep 0)
+(setq C (+ A B)) 
+(write-line "Addition Of Two Numbers: ") 
+(:bits C))))
+(write-line "")
+
+
+(sb-thread:make-thread (lambda () (progn (sleep 2)
+(setq c (- A B)) 
+(write-line "substraction Of Two Numbers: ") 
+(:bits C))))
+(write-line "")
+
+ 
+(sb-thread:make-thread (lambda () (progn (sleep 4)
+(setq c (* A B)) 
+(write-line "MULTIPLICATION Of Two Numbers: ") 
+(:bits C))))
+(write-line "")
+
+
+(sb-thread:make-thread (lambda () (progn (sleep 6)
+(setq c (/ A B)) 
+(write-line "Division Of Two Numbers: ") 
+(:bits C))))
+
+
+(exit)))))
+
+OUTPUT:
+[student@localhost ~]$ sbcl
+This is SBCL 1.2.4-1.fc21, an implementation of ANSI Common Lisp.
+More information about SBCL is available at <http://www.sbcl.org/>.
+
+SBCL is free software, provided as is, with absolutely no warranty.
+It is mostly in the public domain; some portions are provided under
+BSD-style licenses.  See the CREDITS and COPYING files in the
+distribution for more information.
+* (load "Calculator.lisp")
+Welcome To Calculator
+Enter A: 
+4
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~100Enter B: 
+2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~101.Addition
+2.Substraction
+3.Multiplication
+4.Division
+
+Addition Of Two Numbers: 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~110
+substraction Of Two Numbers: 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~10
+MULTIPLICATION Of Two Numbers: 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~1000
+DIVISION Of Two Numbers: 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~10
+

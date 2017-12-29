@@ -1,0 +1,180 @@
+Lex1.l:-
+%option reentrant
+%option bison-bridge
+%option noyywrap
+%option bison-locations
+%{
+  #include "parser.h"
+
+%}
+
+%%
+
+
+"(" { return (LPAREN); }
+")" { return (RPAREN); }
+\n {return(N);}
+.|[ \t]+   { }
+%%
+
+
+
+Main.c:-
+
+#include "parser.h"
+#include "lexer.h"
+//to read filenames for parsing
+struct fname
+{
+  char fn[10];
+};
+
+//to store temp. result of scanner
+ struct pwc {
+   char op[20];
+ };
+
+
+int main(int argc, char **argv) {
+  int result,n,i;
+  struct fname file[10];
+  struct pwc mypwc;
+  yyscan_t scanner;  
+  FILE *f;
+  yylex_init(&scanner);
+  printf("\n enter no. of files:");
+  scanf("%d",&n);
+  printf("\n enter file names:");
+  for(i=0;i<n;i++)
+  {
+    scanf("%s",file[i].fn);
+  }
+
+  for(i=0;i<n;i++)
+  {
+    printf("fname=%s ",file[i].fn);
+  }
+
+
+
+#pragma omp parallel num_threads(n) shared(file) private(f,scanner,result,mypwc) 
+ 		{		
+			if(yylex_init_extra(&mypwc, &scanner)) 
+			{
+					perror("init alloc failed");
+					//return 1;
+			}				
+			
+			int tid=omp_get_thread_num();
+			printf("\n in parallel=%d\n",tid);
+ 			f=fopen(file[tid].fn,"r");
+			yyset_in(f,scanner);
+			 result = (yyparse(scanner));
+                       
+			 yylex_destroy(scanner);
+									
+		}
+//printf("\n after scanning");
+ //sleep(10);
+return 0;
+}
+
+/*
+flex --header-file=lexer.h lex1.l
+bison --defines=parser.h pars.y
+gcc -fopenmp lex.yy.c pars.tab.c main.c -o parser
+./parser
+
+**/
+
+
+Pars:-
+
+%define api.pure true
+%locations
+%token-table
+%glr-parser
+%lex-param {void *scanner}
+%parse-param {void *scanner}
+
+%{
+/* your top code here */
+#include<omp.h>
+int t;
+%}
+
+%token LPAREN
+%token RPAREN
+%token N
+
+%%
+
+document  : 
+   	  | document exprs N {printf("\n successful parsing by thread ID=%d\n",omp_get_thread_num()); } 
+;
+exprs
+    :
+    | expr exprs
+;
+expr
+    : parens
+;
+parens
+    : LPAREN exprs RPAREN
+;
+
+%%
+
+int yyerror() {
+    printf("\nparse error: thread ID=%d\n",omp_get_thread_num());
+
+}
+
+
+
+
+
+Ip.txt:-
+(t*(a+b))(t*(a+b))
+
+Ip1.txt:-
+(r+(a*b))
+(r+(a*b))
+(A+()
+(r+(a*b))
+
+Ip2.txt
+(((())))
+
+
+OUTPUT:-
+
+[student@localhost Yacc]$ bison --defines=parser.h pars.y
+[student@localhost Yacc]$ gcc -fopenmp lex.yy.c pars.tab.c main.c -o parser
+[student@localhost Yacc]$ ./parser
+
+ enter no. of files:3
+
+ enter file names:ip
+ip1
+ip2
+fname=ip fname=ip1 fname=ip2 
+ in parallel=2
+
+ in parallel=0
+
+ in parallel=1
+
+ successful parsing by thread ID=2
+
+ successful parsing by thread ID=1
+
+ successful parsing by thread ID=0
+
+ successful parsing by thread ID=0
+
+ successful parsing by thread ID=1
+
+parse error: thread ID=1
+
+

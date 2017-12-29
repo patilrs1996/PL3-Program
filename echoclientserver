@@ -1,0 +1,254 @@
+
+PROGRAM:
+SERVER CODE:
+
+
+import java.net.*; 
+import java.io.*; 
+
+public class EchoServer 
+{         
+    ServerSocket ss; 
+       DataInputStream dis;
+    DataOutputStream dos;
+     
+    public EchoServer()  
+    { 
+        try 
+        { 
+           
+            ss = new ServerSocket(1254); 
+        } 
+        catch(IOException ioe) 
+        { 
+            System.out.println("Could not create server socket"); 
+            System.exit(-1); 
+        } 
+         
+        System.out.println("Listening for clients"); 
+         
+        
+        int id = 0; 
+        while(true) 
+        {                         
+            try 
+            { 
+               
+                Socket clientSocket = ss.accept(); 
+             
+                 
+                ClientThread ct = new ClientThread(clientSocket, id++); 
+                ct.start(); 
+		dis= new DataInputStream(clientSocket.getInputStream());
+            dos= new DataOutputStream(clientSocket.getOutputStream());
+            } 
+            catch(IOException ioe) 
+            { 
+                System.out.println("Exception occured :"); 
+                ioe.printStackTrace(); 
+            } 
+        } 
+    } 
+     
+    public static void main (String[] args) 
+    { 
+        new EchoServer();     
+    } 
+     
+     
+    class ClientThread extends Thread 
+    { 
+        Socket ss;         
+        int m_clientID = -1; 
+        boolean m_bRunThread = true; 
+         
+        ClientThread(Socket s, int clientID) 
+        { 
+           ss = s; 
+            m_clientID = clientID; 
+        } 
+        
+        public void run() 
+        {             
+            
+         
+          
+            System.out.println("Accepted Client : ID - " + m_clientID + " : Address - " +  
+                             ss.getInetAddress().getHostName()); 
+                 
+            try 
+            {                                 
+               
+                while(m_bRunThread) 
+                {                     
+                 
+		String str, s1;
+         do
+         {
+             str=dis.readUTF();
+             System.out.println("Client Message:"+str);
+             BufferedReader br=new BufferedReader(new   InputStreamReader(System.in));
+             s1=br.readLine();
+             dos.writeUTF(s1);
+             dos.flush();
+         }
+         while(!s1.equals("bye"));
+                } 
+            } 
+            catch(Exception e) 
+            { 
+                e.printStackTrace(); 
+            } 
+            finally 
+            { 
+               
+                try 
+                {                     
+                   
+                    ss.close(); 
+                    System.out.println("Stopped"); 
+                } 
+                catch(IOException ioe) 
+                { 
+                    ioe.printStackTrace(); 
+                } 
+            } 
+        } 
+    } 
+} 
+
+CLIENT CODE:
+
+import java.net.*; 
+import java.io.*; 
+
+
+public class EchoClient 
+{ 
+
+	
+    public static void main(String[] args) 
+    { 
+	 
+
+	Socket s = null; 
+	    String host = "localhost";
+            int port = 6666;
+          InetAddress address;
+		//String address = "11.11.3.158";  // Indicating the place to put Server's IP
+
+         	DataInputStream din;
+    DataOutputStream dout;
+        
+        try 
+        { 
+	   address = InetAddress.getByName(host);
+
+            s = new Socket(address, port);
+		
+           
+        }         
+        catch(UnknownHostException e) 
+        { 
+           
+            System.out.println(e); 
+           
+        } 
+        catch(IOException ioe) 
+        { 
+           
+            System.out.println("Cant connect to server at 6666."); 
+           
+        } 
+         
+        if(s == null) 
+            System.exit(-1); 
+ 
+         
+        BufferedReader in = null; 
+        PrintWriter out = null; 
+         
+        try 
+        { 
+            
+           
+		BufferedReader br= new BufferedReader(new InputStreamReader(System.in));
+		din= new DataInputStream(s.getInputStream());
+             dout= new DataOutputStream(s.getOutputStream());
+           String s1;
+           do
+           {
+               s1=br.readLine();
+               dout.writeUTF(s1);
+               dout.flush();
+               System.out.println("Server Message:"+din.readUTF());
+           }
+           while(!s1.equals("stop"));
+             
+           
+        } 
+        catch(IOException ioe) 
+        { 
+            System.out.println("Exception during communication. "); 
+        } 
+        finally 
+        { 
+            try 
+            { 
+               
+                out.close(); 
+                in.close(); 
+              
+                s.close(); 
+            } 
+            catch(Exception e) 
+            { 
+                e.printStackTrace(); 
+            }                 
+        }         
+    } 
+} 
+OUTPUT:
+
+SERVER SIDE:
+
+[root@localhost teb75]# javac EchoServer.java
+[root@localhost teb75]# java EchoServer
+Listening for clients
+Accepted Client : ID - 0 : Address - 11.11.3.158
+Client Message:hi
+hello,welcome
+Client Message:Are You Server side?
+yes
+Client Message:stop
+bye
+Stopped
+************************************
+CLIENT SIDE:
+
+
+
+root@beaglebone:/home# export PATH=$PATH:/home/jdk1.7.0_60/bin
+root@beaglebone:/home# export JAVA_HOME=/home/jdk1.7.0_60
+root@beaglebone:/home# ifconfig eth0 192.168.3.158
+root@beaglebone:/home# ifconfig eth0 11.11.3.158
+root@beaglebone:/home# ifconfig
+
+root@beaglebone:/home#  javac  EchoClient.java
+root@beaglebone:/home# java EchoClient
+hi
+Server Message:hello
+^Croot@beaglebone:/home# java EchoClient
+hi
+Server Message:hello,welcome
+Are You Server side?
+Server Message:yes
+stop
+Server Message:bye
+java.lang.NullPointerException
+	at EchoClient.main(EchoClient.java:79)
+root@beaglebone:/home# 
+
+
+
+
